@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URL")
+}
+
+enum EncounterType {
+  CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+  TELEMEDICINE
+}
+
+enum EncounterStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Role {
+  SuperAdmin
+  Admin
+  Patient
+  Provider
+}
+
+enum TestStatus {
+  Pending
+  Ongoing
+  Completed
+}
+
+enum ReferralStatus {
+  Pending
+  Approved
+  Ongoing
+  Rejected
+  Completed
+}
+
+model Medication {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  dosage       String
+  frequency    String
+  duration     String
+  instructions String?
+  drug_form    String?
+  quantity     Int?
+  tracking_id  String?    @unique
+  patient_id   String     @db.ObjectId
+  provider_id  String     @db.ObjectId
+  encounter_id String?    @db.ObjectId
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  patient      Patient    @relation(fields: [patient_id], references: [id])
+  provider     Provider   @relation(fields: [provider_id], references: [id])
+  Encounter    Encounter? @relation(fields: [encounter_id], references: [id])
+
+  @@index([patient_id])    
+  @@index([provider_id])
+  @@index([patient_id, provider_id], name: "patient_provider_idx")
+}
+
+model Test {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  note         String?
+  urgency      String?
+  tat          String?
+  tracking_id  String?     @unique
+  facility     String?
+  status       TestStatus? @default(Pending) // pending| ongoing | completed
+  patient_id   String      @db.ObjectId
+  provider_id  String      @db.ObjectId
+  encounter_id String?     @db.ObjectId
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  patient      Patient     @relation(fields: [patient_id], references: [id])
+  provider     Provider    @relation(fields: [provider_id], references: [id])
+  Encounter    Encounter?  @relation(fields: [encounter_id], references: [id])
+
+  @@index([patient_id])    
+  @@index([provider_id])
+  @@index([status])
+  @@index([patient_id, provider_id], name: "patient_provider_idx")
+}
+
+model Referral {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  reason       String
+  note         String?
+  urgency      String?
+  tracking_id  String?         @unique
+  facility     String?
+  status       ReferralStatus? @default(Pending) // pending| approved| ongoing | rejected |completed
+  patient_id   String          @db.ObjectId
+  provider_id  String          @db.ObjectId
+  encounter_id String?         @db.ObjectId
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
+  patient      Patient         @relation(fields: [patient_id], references: [id])
+  provider     Provider        @relation(fields: [provider_id], references: [id])
+  Encounter    Encounter?      @relation(fields: [encounter_id], references: [id])
+
+  @@index([patient_id])    
+  @@index([provider_id])
+  @@index([status])
+  @@index([patient_id, provider_id], name: "patient_provider_idx")
+}
+
+type Assessment {
+  primary_diagnosis      String?
+  secondary_diagnosis    String[] @default([])
+  differential_diagnosis String[] @default([])
+  clinical_impression    String?
+}
+
+type VitalSign {
+  blood_pressure    String?
+  heart_rate        Float?
+  temperature       Float?
+  respiratory_rate  Float?
+  oxygen_saturation Float?
+  height            Float?
+  weight            Float?
+  bmi               Float?
+}
+
+type Objective {
+  vital_signs          VitalSign?
+  physical_examination String? // Provider’s findings on examination
+  laboratory_results   String? // Lab data or test outcomes
+  diagnostic_tests     String?
+}
+
+type Subjective {
+  chief_complaint            String?
+  history_of_present_illness String?
+  review_of_systems          String?
+  social_history             String?
+  family_history             String?
+}
+
+model Encounter {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  patient_id        String          @db.ObjectId
+  provider_id       String          @db.ObjectId
+  encounter_type    EncounterType // consultation | follow-up | emergency | telemedicine
+  status            EncounterStatus // scheduled | in_progress | completed | cancelled
+  scheduled_date    DateTime
+  actual_start_time DateTime?
+  actual_end_time   DateTime?
+  symptoms          String[]        @default([])
+
+  subjective Subjective?
+  objective  Objective?
+  assessment Assessment?
+
+  clinical_notes String?
+  custom_fields  Json?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  medications Medication[]
+  patient     Patient      @relation(fields: [patient_id], references: [id])
+  provider    Provider     @relation(fields: [provider_id], references: [id])
+  Tests       Test[]
+  Referral    Referral[]
+
+  @@index([patient_id])    
+  @@index([provider_id])
+  @@index([status])
+  @@index([patient_id, provider_id], name: "patient_provider_idx")
+}
+
+model Patient {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  account_id   String       @db.ObjectId
+  account      Account      @relation(fields: [account_id], references: [id])
+  first_name   String?
+  last_name    String?
+  dob          DateTime?
+  gender       String?
+  blood_group  String?
+  genotype     String?
+  address      String?
+  image        String?
+  phone_number String?
+  height       Float?
+  weight       Float?
+  bmi          Float?
+  hmo_id       String?
+  encounters   Encounter[]
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  medications  Medication[]
+  Tests        Test[]
+  Referral     Referral[]
+}
+
+model Provider {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  account_id   String       @db.ObjectId
+  account      Account      @relation(fields: [account_id], references: [id])
+  name         String       @unique
+  image        String?
+  type         String? // hospital, hmo, e.t.c
+  phone_number String?
+  address      String?
+  whatsapp     String?
+  hotline      String?
+  encounters   Encounter[]
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  medications  Medication[]
+  Tests        Test[]
+  Referral     Referral[]
+}
+
+model Account {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  email             String     @unique
+  password          String? // optional in case we want to extend to social signin
+  role              Role // patient|admin|provider enum
+  is_email_verified Boolean?
+  last_login        DateTime?
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+  Patient           Patient[]
+  Provider          Provider[]
+}

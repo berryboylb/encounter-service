@@ -27,3 +27,4 @@ dist-ssr
 
 #lock file
 package-lock.json
+/src/generated/prisma
