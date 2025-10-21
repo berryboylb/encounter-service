@@ -68,7 +68,7 @@ model Medication {
   provider     Provider   @relation(fields: [provider_id], references: [id])
   Encounter    Encounter? @relation(fields: [encounter_id], references: [id])
 
-  @@index([patient_id])    
+  @@index([patient_id])
   @@index([provider_id])
   @@index([patient_id, provider_id], name: "patient_provider_idx")
 }
@@ -91,7 +91,7 @@ model Test {
   provider     Provider    @relation(fields: [provider_id], references: [id])
   Encounter    Encounter?  @relation(fields: [encounter_id], references: [id])
 
-  @@index([patient_id])    
+  @@index([patient_id])
   @@index([provider_id])
   @@index([status])
   @@index([patient_id, provider_id], name: "patient_provider_idx")
@@ -114,7 +114,7 @@ model Referral {
   provider     Provider        @relation(fields: [provider_id], references: [id])
   Encounter    Encounter?      @relation(fields: [encounter_id], references: [id])
 
-  @@index([patient_id])    
+  @@index([patient_id])
   @@index([provider_id])
   @@index([status])
   @@index([patient_id, provider_id], name: "patient_provider_idx")
@@ -179,7 +179,7 @@ model Encounter {
   Tests       Test[]
   Referral    Referral[]
 
-  @@index([patient_id])    
+  @@index([patient_id])
   @@index([provider_id])
   @@index([status])
   @@index([patient_id, provider_id], name: "patient_provider_idx")
