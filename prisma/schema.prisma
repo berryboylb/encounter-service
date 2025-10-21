@@ -157,6 +157,7 @@ model Encounter {
   id                String          @id @default(auto()) @map("_id") @db.ObjectId
   patient_id        String          @db.ObjectId
   provider_id       String          @db.ObjectId
+  branch_id         String?         @db.ObjectId
   encounter_type    EncounterType // consultation | follow-up | emergency | telemedicine
   status            EncounterStatus // scheduled | in_progress | completed | cancelled
   scheduled_date    DateTime
@@ -176,12 +177,14 @@ model Encounter {
   medications Medication[]
   patient     Patient      @relation(fields: [patient_id], references: [id])
   provider    Provider     @relation(fields: [provider_id], references: [id])
+  branch      Branch?      @relation(fields: [branch_id], references: [id])
   Tests       Test[]
   Referral    Referral[]
 
   @@index([patient_id])
   @@index([provider_id])
   @@index([status])
+  @@index([branch_id])
   @@index([patient_id, provider_id], name: "patient_provider_idx")
 }
 
@@ -221,7 +224,9 @@ model Provider {
   address      String?
   whatsapp     String?
   hotline      String?
+  available    Boolean?
   encounters   Encounter[]
+  branches     Branch[]
   created_at   DateTime     @default(now())
   updated_at   DateTime     @updatedAt
   medications  Medication[]
@@ -240,4 +245,24 @@ model Account {
   updated_at        DateTime   @updatedAt
   Patient           Patient[]
   Provider          Provider[]
+}
+
+model Branch {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  provider_id  String   @db.ObjectId
+  name         String
+  address      String?
+  phone_number String?
+  email        String?
+  whatsapp     String?
+  hotline      String?
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  provider   Provider    @relation(fields: [provider_id], references: [id])
+  encounters Encounter[]
+
+  @@index([provider_id])
+  @@index([is_active])
 }
