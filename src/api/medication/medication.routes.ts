@@ -81,3 +81,41 @@ medicationRouter.get(
   roleGuard(Role.Provider, Role.Admin),
   medicationController.metrics
 );
+
+// ===============================
+// GET /medications
+// ===============================
+medicationRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/medications",
+  tags: ["Encounter"],
+  security: [],
+  responses: createApiResponse(
+    MedicationSchema.array(),
+    "Medications fetched successfully"
+  ),
+});
+
+medicationRouter.get("/", authMiddleware, medicationController.getMedications);
+
+// ===============================
+// GET /medications/:id
+// ===============================
+medicationRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/medications/{id}",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    MedicationSchema,
+    "Encounter fetched successfully"
+  ),
+});
+
+medicationRouter.get(
+  "/:id",
+  authMiddleware,
+  validate(commonValidations.id, "params"),
+  medicationController.getMedication
+);

@@ -2,10 +2,17 @@
 import { PrismaClient } from "@/generated/prisma";
 
 import { prisma } from "@/prisma.client";
+import qs from "qs";
 
 // A helper type to infer the argument types of model delegate methods
-type DelegateMethodArgs<T, K extends keyof T> = T[K] extends (args: infer A) => any ? A : never;
-type DelegateReturnType<T, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
+type DelegateMethodArgs<T, K extends keyof T> = T[K] extends (
+  args: infer A
+) => any
+  ? A
+  : never;
+type DelegateReturnType<T, K extends keyof T> = T[K] extends (
+  ...args: any[]
+) => Promise<infer R>
   ? R
   : never;
 
@@ -87,7 +94,6 @@ export abstract class BaseRepository<
     return this.model.aggregate(options);
   }
 
-
   async findPaginated<T extends Record<string, any>>(options: {
     page?: number;
     pageSize?: number;
@@ -102,7 +108,8 @@ export abstract class BaseRepository<
     pageSize: number;
     totalPages: number;
   }> {
-    const {
+    console.log("options", options);
+    let {
       page = 1,
       pageSize = 10,
       search,
@@ -110,6 +117,33 @@ export abstract class BaseRepository<
       orderBy,
       searchFields = [],
     } = options;
+
+    page = Number(page) || 1;
+    pageSize = Number(pageSize) || 10;
+
+    // 🔧 Fix: handle raw query strings like { 'filterBy[available]': 'true' }
+    if (typeof filterBy === "object" && Object.keys(filterBy).length === 0) {
+      // Check if the input actually looks like raw query object
+      const maybeRaw = options as Record<string, any>;
+      const flatKeys = Object.keys(maybeRaw).filter((k) =>
+        k.startsWith("filterBy[")
+      );
+      if (flatKeys.length) {
+        const parsed = qs.parse(maybeRaw);
+        filterBy = parsed.filterBy || {};
+      }
+    }
+
+    // ✅ Convert string values into proper types (boolean / number)
+    // ✅ Convert string values into proper types (boolean / number)
+    for (const key in filterBy) {
+      const value = (filterBy as any)[key];
+      if (value === "true") (filterBy as any)[key] = true;
+      else if (value === "false") (filterBy as any)[key] = false;
+      else if (!Number.isNaN(Number(value))) (filterBy as any)[key] = Number(value);
+    }
+
+    console.log("filterBy", filterBy);
 
     const where: any = { ...filterBy };
 
@@ -121,14 +155,16 @@ export abstract class BaseRepository<
     }
 
     // Handle orderBy string
-    let order: any = undefined;
+    let order: any = { created_at: "desc" };
     if (orderBy) {
       const isDesc = orderBy.startsWith("-");
       const field = isDesc ? orderBy.slice(1) : orderBy;
       order = { [field]: isDesc ? "desc" : "asc" };
     }
 
-    const total = await (this.model as any).count({ where });
+    console.log("where", where);
+
+    const total = await(this.model as any).count({ where });
     const data = await this.model.findMany({
       where,
       skip: (page - 1) * pageSize,

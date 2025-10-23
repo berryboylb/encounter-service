@@ -13,8 +13,25 @@ export class PatientService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Patient[]> | null>> {
     try {
+     const paginatedOptions = {
+       ...options,
+       ...(options?.search
+         ? {
+             searchFields: options.searchFields ?? [
+               "first_name",
+               "last_name",
+               "gender",
+               "blood_group",
+               "genotype",
+               "address",
+               "phone_number",
+               "hmo_id",
+             ],
+           }
+         : {}),
+     };
       const patients = await this.patientRepository.findPaginated(
-        options ?? {}
+        paginatedOptions
       );
 
       return ServiceResponse.success<PaginatedOptions<Patient[]> | null>(

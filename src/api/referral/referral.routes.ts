@@ -35,7 +35,7 @@ referralRegistry.registerPath({
   request: {
     body: { content: { "application/json": { schema: CreateReferralSchema } } },
   },
-  responses: createApiResponse(ReferralSchema, "Success"),
+  responses: createApiResponse(ReferralSchema, "Referral created successfully"),
 });
 referralRouter.post(
   "/",
@@ -54,7 +54,7 @@ referralRegistry.registerPath({
     params: z.object({ id: commonValidations.id }),
     body: { content: { "application/json": { schema: UpdateReferralSchema } } },
   },
-  responses: createApiResponse(ReferralSchema, "Updated successfully"),
+  responses: createApiResponse(ReferralSchema, "Referral updated successfully"),
 });
 referralRouter.patch(
   "/:id",
@@ -69,11 +69,135 @@ referralRegistry.registerPath({
   method: "get",
   path: "/referrals/metrics",
   tags: ["Referral"],
-  responses: createApiResponse(z.any(), "Metrics retrieved successfully"),
+  responses: createApiResponse(
+    z.any(),
+    "Referral metrics retrieved successfully"
+  ),
 });
 referralRouter.get(
   "/metrics",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
   referralController.metrics
+);
+
+// Get all referrals
+referralRegistry.registerPath({
+  method: "get",
+  path: "/referrals",
+  tags: ["Referral"],
+  security: [],
+  responses: createApiResponse(
+    ReferralSchema.array(),
+    "Referrals fetched successfully"
+  ),
+});
+referralRouter.get("/", authMiddleware, referralController.getReferrals);
+
+// Get single referral
+referralRegistry.registerPath({
+  method: "get",
+  path: "/referrals/{id}",
+  tags: ["Referral"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(ReferralSchema, "Referral fetched successfully"),
+});
+referralRouter.get(
+  "/:id",
+  authMiddleware,
+  validate(commonValidations.id, "params"),
+  referralController.getReferral
+);
+
+// Approve referral
+referralRegistry.registerPath({
+  method: "patch",
+  path: "/referrals/{id}/approve",
+  tags: ["Referral"],
+  request: { params: z.object({ id: commonValidations.id }) },
+  responses: createApiResponse(
+    ReferralSchema,
+    "Referral approved successfully"
+  ),
+});
+referralRouter.patch(
+  "/:id/approve",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin),
+  validate(commonValidations.id, "params"),
+  referralController.approve
+);
+
+// Reject referral
+referralRegistry.registerPath({
+  method: "patch",
+  path: "/referrals/{id}/reject",
+  tags: ["Referral"],
+  request: { params: z.object({ id: commonValidations.id }) },
+  responses: createApiResponse(
+    ReferralSchema,
+    "Referral rejected successfully"
+  ),
+});
+referralRouter.patch(
+  "/:id/reject",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin),
+  validate(commonValidations.id, "params"),
+  referralController.reject
+);
+
+// Mark referral as ongoing
+referralRegistry.registerPath({
+  method: "patch",
+  path: "/referrals/{id}/ongoing",
+  tags: ["Referral"],
+  request: { params: z.object({ id: commonValidations.id }) },
+  responses: createApiResponse(
+    ReferralSchema,
+    "Referral marked as ongoing successfully"
+  ),
+});
+referralRouter.patch(
+  "/:id/ongoing",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin),
+  validate(commonValidations.id, "params"),
+  referralController.markOngoing
+);
+
+// Complete referral
+referralRegistry.registerPath({
+  method: "patch",
+  path: "/referrals/{id}/complete",
+  tags: ["Referral"],
+  request: { params: z.object({ id: commonValidations.id }) },
+  responses: createApiResponse(
+    ReferralSchema,
+    "Referral completed successfully"
+  ),
+});
+referralRouter.patch(
+  "/:id/complete",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin),
+  validate(commonValidations.id, "params"),
+  referralController.complete
+);
+
+// Delete referral
+referralRegistry.registerPath({
+  method: "delete",
+  path: "/referrals/{id}",
+  tags: ["Referral"],
+  request: { params: z.object({ id: commonValidations.id }) },
+  responses: createApiResponse(z.boolean(), "Referral deleted successfully"),
+});
+referralRouter.delete(
+  "/:id",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin),
+  validate(commonValidations.id, "params"),
+  referralController.delete
 );

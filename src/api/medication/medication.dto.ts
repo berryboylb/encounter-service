@@ -49,3 +49,10 @@ export const MedicationSchema = commonValidations.baseSchema.extend({
   provider_id: z.string(),
   encounter_id: z.string().optional(),
 });
+
+export const MedicationMetricsSchema = z.object({
+  patient_id: commonValidations.id.optional(),
+  provider_id: commonValidations.id.optional(),
+});
+
+export type MedicationMetrics = z.infer<typeof MedicationMetricsSchema>;

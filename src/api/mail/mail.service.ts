@@ -8,6 +8,8 @@ interface SendMailOptions {
   text?: string;
   html?: string;
   from?: string;
+  cc?: string | string[]; // 👈 added
+  bcc?: string | string[];
 }
 
 export class MailService {

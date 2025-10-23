@@ -101,7 +101,7 @@ patientRegistry.registerPath({
 patientRouter.get(
   "/:id",
   authMiddleware,
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   patientController.getPatient
 );
 
@@ -141,7 +141,7 @@ patientRegistry.registerPath({
 patientRouter.delete(
   "/:id",
   authMiddleware,
-  roleGuard(Role.SuperAdmin, Role.Admin),
-  validate(commonValidations.id, "params"),
+  // roleGuard(Role.SuperAdmin, Role.Admin),
+  validate(commonValidations.params, "params"),
   patientController.deletePatient
 );

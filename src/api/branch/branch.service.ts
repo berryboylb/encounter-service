@@ -21,7 +21,7 @@ export class BranchService {
 
       if (!provider) {
         return ServiceResponse.failure(
-          `Provider not found`,
+          `Provider profile not found for this user`,
           null,
           StatusCodes.NOT_FOUND
         );
@@ -46,17 +46,35 @@ export class BranchService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Branch[]> | null>> {
     try {
-      const branches = await this.branchRepository.findPaginated(options ?? {});
+      const paginatedOptions = {
+        ...options,
+        ...(options?.search
+          ? {
+              searchFields: options.searchFields ?? [
+                "name",
+                "address",
+                "phone_number",
+                "email",
+                "whatsapp",
+                "hotline",
+              ],
+            }
+          : {}),
+      };
+
+      const branches = await this.branchRepository.findPaginated(
+        paginatedOptions
+      );
 
       return ServiceResponse.success<PaginatedOptions<Branch[]> | null>(
-        "Accounts found",
+        "Branches found",
         branches
       );
     } catch (error) {
-      logger.error(`Error fetching all accounts: ${(error as Error).message}`);
+      logger.error(`Error fetching all branches: ${(error as Error).message}`);
 
       return ServiceResponse.failure(
-        "An error occurred while retrieving accounts.",
+        "An error occurred while retrieving branches.",
         null,
         StatusCodes.INTERNAL_SERVER_ERROR
       );
@@ -178,7 +196,10 @@ export class BranchService {
         data,
       });
 
-      return ServiceResponse.success<true>("Branch updated successfully", true);
+      return ServiceResponse.success<Branch>(
+        "Branch updated successfully",
+        branch
+      );
     } catch (error) {
       logger.error(`Error updating Branch: ${(error as Error).message}`);
 

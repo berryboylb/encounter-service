@@ -1,11 +1,10 @@
 import { z } from "zod";
 
 export const commonValidations = {
-  id: z
-    .string(),
-    // .refine((data) => !Number.isNaN(Number(data)), "ID must be a numeric value")
-    // .transform(Number)
-    // .refine((num) => num > 0, "ID must be a positive number"),
+  id: z.string(),
+  // .refine((data) => !Number.isNaN(Number(data)), "ID must be a numeric value")
+  // .transform(Number)
+  // .refine((num) => num > 0, "ID must be a positive number"),
   // ... other common validations
   baseSchema: z.object({
     id: z.string(),
@@ -25,4 +24,6 @@ export const commonValidations = {
       searchFields: z.array(z.string()).optional().default([]), // array of keys of T
     })
     .optional(),
+
+  params: z.object({ id: z.string() }),
 };

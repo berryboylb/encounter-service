@@ -51,3 +51,23 @@ export const ReferralSchema = commonValidations.baseSchema.extend({
   provider_id: z.string(),
   encounter_id: z.string().optional(),
 });
+
+export const ReferralMetricsSchema = z.object({
+  patient_id: commonValidations.id.optional(),
+  provider_id: commonValidations.id.optional(),
+});
+
+export type ReferralMetrics = z.infer<typeof ReferralSchema>;
+
+export const ReferralMetricResultsSchema = z.object({
+  total: z.number(),
+  pending: z.number(),
+  approved: z.number(),
+  ongoing: z.number(),
+  rejected: z.number(),
+  completed: z.number(),
+});
+
+export type ReferralMetricsResults = z.infer<
+  typeof ReferralMetricResultsSchema
+>;

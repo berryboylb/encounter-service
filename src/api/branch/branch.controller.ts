@@ -45,6 +45,7 @@ class BranchController {
 
   // ✅ get branches
   public getBranches: RequestHandler = async (_req: Request, res: Response) => {
+    console.log("query", _req.query);
     const serviceResponse = await branchService.findAll(
       _req.query as unknown as baseFilter
     );
@@ -75,7 +76,7 @@ class BranchController {
     req: Request,
     res: Response
   ) => {
-    const serviceResponse = await branchService.metrics(req.params.id);
+    const serviceResponse = await branchService.metrics(req.params.provider_id);
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
 

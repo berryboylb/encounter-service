@@ -83,41 +83,41 @@ export class ProviderService {
 
   public async getAllMetrics(): Promise<ServiceResponse<any>> {
     try {
-      const [
-        totalProviders,
-        availableProviders,
-        providersWithName,
-        providersWithContact,
-      ] = await Promise.all([
-        this.providerRepository.count({}),
-        this.providerRepository.count({ where: { available: true } }),
-        this.providerRepository.count({ where: { NOT: { name: null } } }),
-        this.providerRepository.count({
-          where: {
-            OR: [
-              { phone_number: { not: null } },
-              { whatsapp: { not: null } },
-              { hotline: { not: null } },
-            ],
-          },
-        }),
-      ]);
+      // const [
+      //   totalProviders,
+      //   availableProviders,
+      //   providersWithName,
+      //   providersWithContact,
+      // ] = await Promise.all([
+      //   this.providerRepository.count({}),
+      //   this.providerRepository.count({ where: { available: true } }),
+      //   this.providerRepository.count({ where: { NOT: { name: null } } }),
+      //   this.providerRepository.count({
+      //     where: {
+      //       OR: [
+      //         { phone_number: { not: null } },
+      //         { whatsapp: { not: null } },
+      //         { hotline: { not: null } },
+      //       ],
+      //     },
+      //   }),
+      // ]);
 
-      const metrics = {
-        totalProviders,
-        availableProviders,
-        providersWithName,
-        providersWithContact,
-        availablePercent: totalProviders
-          ? (availableProviders / totalProviders) * 100
-          : 0,
-        profileCompletePercent: totalProviders
-          ? ((providersWithName + providersWithContact) /
-              (totalProviders * 2)) *
-            100
-          : 0,
-      };
-
+      // const metrics = {
+      //   totalProviders,
+      //   availableProviders,
+      //   providersWithName,
+      //   providersWithContact,
+      //   availablePercent: totalProviders
+      //     ? (availableProviders / totalProviders) * 100
+      //     : 0,
+      //   profileCompletePercent: totalProviders
+      //     ? ((providersWithName + providersWithContact) /
+      //         (totalProviders * 2)) *
+      //       100
+      //     : 0,
+      // };
+      const metrics = await this.providerRepository.getAllMetrics();
       return ServiceResponse.success(
         "Aggregated provider metrics retrieved",
         metrics
@@ -140,12 +140,26 @@ export class ProviderService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Provider[]> | null>> {
     try {
+      const paginatedOptions = {
+        ...options,
+        ...(options?.search
+          ? {
+              searchFields: options.searchFields ?? [
+                "name",
+                "address",
+                "phone_number",
+                "whatsapp",
+                "hotline",
+              ],
+            }
+          : {}),
+      };
       const accounts = await this.providerRepository.findPaginated(
-        options ?? {}
+        paginatedOptions
       );
 
       return ServiceResponse.success<PaginatedOptions<Provider[]> | null>(
-        "Accounts found",
+        "Providers found",
         accounts
       );
     } catch (error) {

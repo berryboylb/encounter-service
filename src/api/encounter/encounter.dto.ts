@@ -5,18 +5,13 @@ import { commonValidations } from "@/common/utils/commonValidation";
 extendZodWithOpenApi(z);
 
 // ------------------ Enums ------------------ //
-export const EncounterTypeEnum = z.enum([
-  "consultation",
-  "follow-up",
-  "emergency",
-  "telemedicine",
-]);
+export const EncounterTypeEnum = z.enum(["CONSULTATION", "FOLLOW_UP"]);
 
 export const EncounterStatusEnum = z.enum([
-  "scheduled",
-  "in_progress",
-  "completed",
-  "cancelled",
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
 ]);
 
 // ------------------ Nested Schemas ------------------ //
@@ -59,7 +54,7 @@ export const CreateEncounterSchema = z.object({
   provider_id: z.string(),
   branch_id: z.string().optional(),
   encounter_type: EncounterTypeEnum,
-  status: EncounterStatusEnum.optional().default("scheduled"),
+  status: EncounterStatusEnum.optional().default("SCHEDULED"),
   scheduled_date: z.coerce.date(),
   actual_start_time: z.coerce.date().optional(),
   actual_end_time: z.coerce.date().optional(),
@@ -116,3 +111,27 @@ export const EncounterSchema = commonValidations.baseSchema.extend({
 });
 
 export type Encounter = z.infer<typeof EncounterSchema>;
+
+export const MetricsSchema = z.object({
+  account_id: commonValidations.id.optional(),
+  patient_id: commonValidations.id.optional(),
+  provider_id: commonValidations.id.optional(),
+  branch_id: commonValidations.id.optional(),
+});
+
+export type Metrics = z.infer<typeof MetricsSchema>;
+
+
+
+
+export const EncounterMetricsSchema = z.object({
+  total: z.number(),
+  scheduled: z.number(),
+  in_progress: z.number(),
+  completed: z.number(),
+  cancelled: z.number(),
+  consultation: z.number(),
+  follow_ups: z.number(),
+});
+
+export type EncounterMetrics = z.infer<typeof EncounterMetricsSchema>;

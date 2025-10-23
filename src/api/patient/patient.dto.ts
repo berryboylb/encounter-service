@@ -9,7 +9,10 @@ extendZodWithOpenApi(z);
 export const UpdatePatientSchema = z.object({
   first_name: z.string().optional(),
   last_name: z.string().optional(),
-  dob: z.date().optional(),
+  dob: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
   gender: z.string().optional(),
   blood_group: z.string().optional(),
   genotype: z.string().optional(),

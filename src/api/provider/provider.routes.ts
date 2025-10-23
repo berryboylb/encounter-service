@@ -124,9 +124,9 @@ providerRegistry.registerPath({
 });
 
 providerRouter.get(
-  "/",
+  "/:id",
   authMiddleware,
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   providerController.getProvider
 );
 
@@ -168,8 +168,8 @@ providerRouter.delete(
   "/:id",
   authMiddleware,
   roleGuard(Role.SuperAdmin, Role.Admin),
-  validate(commonValidations.id, "params"),
-  providerController.getProvider
+  validate(commonValidations.params, "params"),
+  providerController.deleteProvider
 );
 
 // ✅ Single provider by ID (admin)

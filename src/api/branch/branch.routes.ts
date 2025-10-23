@@ -96,7 +96,7 @@ branchRouter.delete(
   "/:id",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin, Role.SuperAdmin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   branchController.delete
 );
 
@@ -116,24 +116,7 @@ branchRegistry.registerPath({
 
 branchRouter.get("/", authMiddleware, branchController.getBranches);
 
-// ===============================
-// GET /branch/:id
-// ===============================
-branchRegistry.registerPath({
-  method: "get",
-  path: "/api/v1/branch/{id}",
-  tags: ["Branch"],
-  //   request: { params: commonValidations.id },
-  security: [],
-  responses: createApiResponse(BranchSchema, "Branch fetched successfully"),
-});
 
-branchRouter.get(
-  "/:id",
-  authMiddleware,
-  validate(commonValidations.id, "params"),
-  branchController.getBranch
-);
 
 // ===============================
 // GET /branch/metrics
@@ -155,6 +138,26 @@ branchRegistry.registerPath({
 
 branchRouter.get("/metrics", authMiddleware, branchController.getMetrics);
 
+
+// ===============================
+// GET /branch/:id
+// ===============================
+branchRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/branch/{id}",
+  tags: ["Branch"],
+  //   request: { params: commonValidations.id },
+  security: [],
+  responses: createApiResponse(BranchSchema, "Branch fetched successfully"),
+});
+
+branchRouter.get(
+  "/:id",
+  authMiddleware,
+  validate(commonValidations.params, "params"),
+  branchController.getBranch
+);
+
 // ===============================
 // GET /branch/metrics/{provider_id}
 // ===============================
@@ -175,7 +178,7 @@ branchRegistry.registerPath({
 });
 
 branchRouter.get(
-  "/metrics/{provider_id}",
+  "/metrics/:provider_id",
   authMiddleware,
   branchController.getProviderBranchMetrics
 );

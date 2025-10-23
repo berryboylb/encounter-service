@@ -17,8 +17,6 @@ datasource db {
 enum EncounterType {
   CONSULTATION
   FOLLOW_UP
-  EMERGENCY
-  TELEMEDICINE
 }
 
 enum EncounterStatus {
@@ -37,8 +35,8 @@ enum Role {
 
 enum TestStatus {
   Pending
-  Ongoing
-  Completed
+  Approved
+  Rejected
 }
 
 enum ReferralStatus {
@@ -159,8 +157,8 @@ model Encounter {
   provider_id            String          @db.ObjectId
   branch_id              String?         @db.ObjectId
   follow_up_encounter_id String?         @db.ObjectId
-  encounter_type         EncounterType // consultation | follow-up | emergency | telemedicine
-  status                 EncounterStatus // scheduled | in_progress | completed | cancelled
+  encounter_type         EncounterType // consultation | follow-up 
+  status                 EncounterStatus @default(SCHEDULED) // scheduled | in_progress | completed | cancelled
   scheduled_date         DateTime
   actual_start_time      DateTime?
   actual_end_time        DateTime?

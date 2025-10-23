@@ -142,12 +142,12 @@ export class AuthService {
 
       console.log("[account]", account);
 
-      if (!account.is_email_verified)
-        return ServiceResponse.failure(
-          "Please verify your email before logging in.",
-          null,
-          StatusCodes.FORBIDDEN
-        );
+      // if (!account.is_email_verified)
+      //   return ServiceResponse.failure(
+      //     "Please verify your email before logging in.",
+      //     null,
+      //     StatusCodes.FORBIDDEN
+      //   );
 
       const isValid = await BcryptHelper.compare(
         payload.password,
@@ -171,11 +171,11 @@ export class AuthService {
         role: account.role,
       });
 
-      mailService.sendMail({
-        to: account.email,
-        subject: "New Login Detected",
-        text: `You logged in on ${new Date().toLocaleString()}. If this wasn't you, reset your password immediately.`,
-      });
+      // mailService.sendMail({
+      //   to: account.email,
+      //   subject: "New Login Detected",
+      //   text: `You logged in on ${new Date().toLocaleString()}. If this wasn't you, reset your password immediately.`,
+      // });
       const { password, ...rest } = account;
 
       return ServiceResponse.success<{
