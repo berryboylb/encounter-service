@@ -154,16 +154,17 @@ type Subjective {
 }
 
 model Encounter {
-  id                String          @id @default(auto()) @map("_id") @db.ObjectId
-  patient_id        String          @db.ObjectId
-  provider_id       String          @db.ObjectId
-  branch_id         String?         @db.ObjectId
-  encounter_type    EncounterType // consultation | follow-up | emergency | telemedicine
-  status            EncounterStatus // scheduled | in_progress | completed | cancelled
-  scheduled_date    DateTime
-  actual_start_time DateTime?
-  actual_end_time   DateTime?
-  symptoms          String[]        @default([])
+  id                     String          @id @default(auto()) @map("_id") @db.ObjectId
+  patient_id             String          @db.ObjectId
+  provider_id            String          @db.ObjectId
+  branch_id              String?         @db.ObjectId
+  follow_up_encounter_id String?         @db.ObjectId
+  encounter_type         EncounterType // consultation | follow-up | emergency | telemedicine
+  status                 EncounterStatus // scheduled | in_progress | completed | cancelled
+  scheduled_date         DateTime
+  actual_start_time      DateTime?
+  actual_end_time        DateTime?
+  symptoms               String[]        @default([])
 
   subjective Subjective?
   objective  Objective?
@@ -174,12 +175,14 @@ model Encounter {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  medications Medication[]
-  patient     Patient      @relation(fields: [patient_id], references: [id])
-  provider    Provider     @relation(fields: [provider_id], references: [id])
-  branch      Branch?      @relation(fields: [branch_id], references: [id])
-  Tests       Test[]
-  Referral    Referral[]
+  medications        Medication[]
+  patient            Patient      @relation(fields: [patient_id], references: [id])
+  provider           Provider     @relation(fields: [provider_id], references: [id])
+  branch             Branch?      @relation(fields: [branch_id], references: [id])
+  parentEncounter    Encounter?   @relation("FollowUpRelation", fields: [follow_up_encounter_id], references: [id], onDelete: NoAction, onUpdate: NoAction) // this the parent encounter
+  followUpEncounters Encounter[]  @relation("FollowUpRelation") // a single encounter can have multiple follow ups
+  Tests              Test[]
+  Referral           Referral[]
 
   @@index([patient_id])
   @@index([provider_id])
@@ -217,7 +220,7 @@ model Provider {
   id           String       @id @default(auto()) @map("_id") @db.ObjectId
   account_id   String       @db.ObjectId
   account      Account      @relation(fields: [account_id], references: [id])
-  name         String?       @unique
+  name         String?      @unique
   image        String?
   type         String? // hospital, hmo, e.t.c
   phone_number String?
@@ -260,7 +263,7 @@ model Branch {
   email        String?
   whatsapp     String?
   hotline      String?
-  available    Boolean?     @default(true)
+  available    Boolean? @default(true)
   is_active    Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt

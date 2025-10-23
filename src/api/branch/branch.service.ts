@@ -251,6 +251,31 @@ export class BranchService {
       );
     }
   }
+
+  async metrics(provider_id?: string): Promise<
+    ServiceResponse<{
+      total: number;
+      active: number;
+      inactive: number;
+    } | null>
+  > {
+    try {
+      const metrics = await this.branchRepository.metrics(provider_id);
+      return ServiceResponse.success<{
+        total: number;
+        active: number;
+        inactive: number;
+      }>("Branch Updated", metrics);
+    } catch (error) {
+      logger.error(`Error fetching Branch: ${(error as Error).message}`);
+
+      return ServiceResponse.failure(
+        "An error occurred while fetching metrics.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
 
 export const branchService = new BranchService();

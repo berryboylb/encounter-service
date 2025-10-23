@@ -69,6 +69,21 @@ class BranchController {
     );
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
+
+  // ✅ providerBranchMetrics
+  public getProviderBranchMetrics: RequestHandler = async (
+    req: Request,
+    res: Response
+  ) => {
+    const serviceResponse = await branchService.metrics(req.params.id);
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
+
+  // ✅ metrics
+  public getMetrics: RequestHandler = async (_: Request, res: Response) => {
+    const serviceResponse = await branchService.metrics();
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
 }
 
 export const branchController = new BranchController();

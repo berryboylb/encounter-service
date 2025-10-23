@@ -19,6 +19,7 @@ export abstract class BaseRepository<
     findFirst: (...args: any[]) => any;
     upsert: (...args: any[]) => any;
     count: (...args: any[]) => any;
+    aggregate: (...args: any[]) => any;
   }
 > {
   protected readonly prisma: PrismaClient;
@@ -79,6 +80,13 @@ export abstract class BaseRepository<
   ): Promise<DelegateReturnType<ModelDelegate, "count">> {
     return this.model.count(options);
   }
+
+  async aggregate(
+    options: DelegateMethodArgs<ModelDelegate, "aggregate">
+  ): Promise<DelegateReturnType<ModelDelegate, "aggregate">> {
+    return this.model.aggregate(options);
+  }
+
 
   async findPaginated<T extends Record<string, any>>(options: {
     page?: number;

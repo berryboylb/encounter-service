@@ -87,7 +87,7 @@ branchRegistry.registerPath({
   method: "delete",
   path: "/api/v1/branch/{id}",
   tags: ["Branch"],
-//   request: { params: commonValidations.id },
+  //   request: { params: commonValidations.id },
   security: [],
   responses: createApiResponse(BranchSchema, "Branch deleted successfully"),
 });
@@ -123,7 +123,7 @@ branchRegistry.registerPath({
   method: "get",
   path: "/api/v1/branch/{id}",
   tags: ["Branch"],
-//   request: { params: commonValidations.id },
+  //   request: { params: commonValidations.id },
   security: [],
   responses: createApiResponse(BranchSchema, "Branch fetched successfully"),
 });
@@ -136,13 +136,58 @@ branchRouter.get(
 );
 
 // ===============================
+// GET /branch/metrics
+// ===============================
+branchRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/branch/metrics",
+  tags: ["Branch"],
+  security: [],
+  responses: createApiResponse(
+    z.object({
+      total: z.number(),
+      active: z.number(),
+      inactive: z.number(),
+    }),
+    "Metrics fetched successfully"
+  ),
+});
+
+branchRouter.get("/metrics", authMiddleware, branchController.getMetrics);
+
+// ===============================
+// GET /branch/metrics/{provider_id}
+// ===============================
+branchRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/branch/metrics/{provider_id}",
+  tags: ["Branch"],
+  //   request: { params: commonValidations.id },
+  security: [],
+  responses: createApiResponse(
+    z.object({
+      total: z.number(),
+      active: z.number(),
+      inactive: z.number(),
+    }),
+    "Metrics fetched successfully"
+  ),
+});
+
+branchRouter.get(
+  "/metrics/{provider_id}",
+  authMiddleware,
+  branchController.getProviderBranchMetrics
+);
+
+// ===============================
 // PATCH /branch/:id/toggle-availability
 // ===============================
 branchRegistry.registerPath({
   method: "patch",
   path: "/api/v1/branch/:id/toggle-availability",
   tags: ["Branch"],
-//   request: { params: commonValidations.id },
+  //   request: { params: commonValidations.id },
   security: [],
   responses: createApiResponse(
     BranchSchema,
