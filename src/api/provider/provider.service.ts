@@ -246,12 +246,12 @@ export class ProviderService {
         );
       }
 
-      return ServiceResponse.success<Provider>("Accounts found", provider);
+      return ServiceResponse.success<Provider>("Provider found", provider);
     } catch (error) {
       logger.error(`Error fetching provider: ${(error as Error).message}`);
 
       return ServiceResponse.failure(
-        "An error occurred while retrieving accounts.",
+        "An error occurred while retrieving Provider.",
         null,
         StatusCodes.INTERNAL_SERVER_ERROR
       );

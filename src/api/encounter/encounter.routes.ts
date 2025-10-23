@@ -54,7 +54,7 @@ encounterRegistry.registerPath({
 encounterRouter.post(
   "/",
   authMiddleware,
-  roleGuard(Role.Provider),
+  // roleGuard(Role.Provider),
   validate(CreateEncounterSchema),
   encounterController.create
 );
@@ -87,7 +87,7 @@ encounterRouter.patch(
   "/:id",
   authMiddleware,
   roleGuard(Role.Provider, Role.Patient),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   validate(UpdateEncounterSchema),
   encounterController.update
 );
@@ -111,7 +111,7 @@ encounterRouter.delete(
   "/:id",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin, Role.SuperAdmin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   encounterController.delete
 );
 
@@ -130,97 +130,6 @@ encounterRegistry.registerPath({
 });
 
 encounterRouter.get("/", authMiddleware, encounterController.getEncounters);
-
-// ===============================
-// GET /encounter/:id
-// ===============================
-encounterRegistry.registerPath({
-  method: "get",
-  path: "/api/v1/encounter/{id}",
-  tags: ["Encounter"],
-  request: { params: commonValidations.params },
-  security: [],
-  responses: createApiResponse(
-    EncounterSchema,
-    "Encounter fetched successfully"
-  ),
-});
-
-encounterRouter.get(
-  "/:id",
-  authMiddleware,
-  validate(commonValidations.id, "params"),
-  encounterController.getEncounter
-);
-
-// ===============================
-// PATCH /encounter/:id/start
-// ===============================
-encounterRegistry.registerPath({
-  method: "patch",
-  path: "/api/v1/encounter/{id}/start",
-  tags: ["Encounter"],
-  request: { params: commonValidations.params },
-  security: [],
-  responses: createApiResponse(
-    EncounterSchema,
-    "Encounter started successfully"
-  ),
-});
-
-encounterRouter.patch(
-  "/:id/start",
-  authMiddleware,
-  roleGuard(Role.Provider, Role.Patient),
-  validate(commonValidations.id, "params"),
-  encounterController.startEncounter
-);
-
-// ===============================
-// PATCH /encounter/:id/complete
-// ===============================
-encounterRegistry.registerPath({
-  method: "patch",
-  path: "/api/v1/encounter/{id}/complete",
-  tags: ["Encounter"],
-  request: { params: commonValidations.params },
-  security: [],
-  responses: createApiResponse(
-    EncounterSchema,
-    "Encounter completed successfully"
-  ),
-});
-
-encounterRouter.patch(
-  "/:id/complete",
-  authMiddleware,
-  roleGuard(Role.Provider, Role.Patient),
-  validate(commonValidations.id, "params"),
-  encounterController.completeEncounter
-);
-
-// ===============================
-// PATCH /encounter/:id/cancel
-// ===============================
-encounterRegistry.registerPath({
-  method: "patch",
-  path: "/api/v1/encounter/{id}/cancel",
-  tags: ["Encounter"],
-  request: { params: commonValidations.params },
-  security: [],
-  responses: createApiResponse(
-    EncounterSchema,
-    "Encounter canceled successfully"
-  ),
-});
-
-encounterRouter.patch(
-  "/:id/cancel",
-  authMiddleware,
-  roleGuard(Role.Provider, Role.Patient, Role.Admin),
-  validate(commonValidations.id, "params"),
-  encounterController.cancelEncounter
-);
 
 // ===============================
 // GET /encounter/metrics
@@ -245,3 +154,96 @@ encounterRouter.get(
   validateQuery(MetricsSchema),
   encounterController.getMetrics
 );
+
+// ===============================
+// GET /encounter/:id
+// ===============================
+encounterRegistry.registerPath({
+  method: "get",
+  path: "/api/v1/encounter/{id}",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    EncounterSchema,
+    "Encounter fetched successfully"
+  ),
+});
+
+encounterRouter.get(
+  "/:id",
+  authMiddleware,
+  validate(commonValidations.params, "params"),
+  encounterController.getEncounter
+);
+
+// ===============================
+// PATCH /encounter/:id/start
+// ===============================
+encounterRegistry.registerPath({
+  method: "patch",
+  path: "/api/v1/encounter/{id}/start",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    EncounterSchema,
+    "Encounter started successfully"
+  ),
+});
+
+encounterRouter.patch(
+  "/:id/start",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Patient),
+  validate(commonValidations.params, "params"),
+  encounterController.startEncounter
+);
+
+// ===============================
+// PATCH /encounter/:id/complete
+// ===============================
+encounterRegistry.registerPath({
+  method: "patch",
+  path: "/api/v1/encounter/{id}/complete",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    EncounterSchema,
+    "Encounter completed successfully"
+  ),
+});
+
+encounterRouter.patch(
+  "/:id/complete",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Patient),
+  validate(commonValidations.params, "params"),
+  encounterController.completeEncounter
+);
+
+// ===============================
+// PATCH /encounter/:id/cancel
+// ===============================
+encounterRegistry.registerPath({
+  method: "patch",
+  path: "/api/v1/encounter/{id}/cancel",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    EncounterSchema,
+    "Encounter canceled successfully"
+  ),
+});
+
+encounterRouter.patch(
+  "/:id/cancel",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Patient, Role.Admin),
+  validate(commonValidations.params, "params"),
+  encounterController.cancelEncounter
+);
+
+

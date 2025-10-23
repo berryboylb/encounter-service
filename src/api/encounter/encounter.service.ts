@@ -52,7 +52,7 @@ export class EncounterService {
         }),
         patientService.patientRepository.findOne({
           where: {
-            account_id: data.patient_id,
+            id: data.patient_id,
           },
         }),
       ]);
@@ -75,7 +75,7 @@ export class EncounterService {
 
       if (!patient) {
         return ServiceResponse.failure(
-          "Patient Profile not ",
+          "Patient Profile not found ",
           null,
           StatusCodes.NOT_FOUND
         );
@@ -135,20 +135,20 @@ export class EncounterService {
       });
 
       // Send email notification fire and forget
-      mailService.sendMail({
-        to: account.email,
-        subject: `Encounter Scheduled - ${encounter.encounter_type}`,
-        cc: branch?.email ? branch.email : undefined,
-        html: `
-            <h2>Encounter Scheduled</h2>
-            <p>Dear ${patient.first_name},</p>
-            <p>Your ${
-              encounter.encounter_type
-            } encounter has been scheduled for <strong>${encounter.scheduled_date.toDateString()}</strong>.</p>
-            ${branch ? `<p>Location: <strong>${branch.name}</strong></p>` : ""}
-            <p>Please arrive on time.</p>
-          `,
-      });
+      // mailService.sendMail({
+      //   to: account.email,
+      //   subject: `Encounter Scheduled - ${encounter.encounter_type}`,
+      //   cc: branch?.email ? branch.email : undefined,
+      //   html: `
+      //       <h2>Encounter Scheduled</h2>
+      //       <p>Dear ${patient.first_name},</p>
+      //       <p>Your ${
+      //         encounter.encounter_type
+      //       } encounter has been scheduled for <strong>${encounter.scheduled_date.toDateString()}</strong>.</p>
+      //       ${branch ? `<p>Location: <strong>${branch.name}</strong></p>` : ""}
+      //       <p>Please arrive on time.</p>
+      //     `,
+      // });
 
       return ServiceResponse.success<Encounter>(
         "Encounter created successfully",
@@ -169,8 +169,22 @@ export class EncounterService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Encounter[]> | null>> {
     try {
+      const paginatedOptions = {
+        ...options,
+        ...(options?.search
+          ? {
+              searchFields: options.searchFields ?? ["clinical_notes"],
+            }
+          : {}),
+        include: {
+          branch: true,
+          provider: true,
+          patient: true, // include related branches
+          //  appointments: { include: { patient: true } }, // nested include
+        },
+      };
       const encounters = await this.encounterRepository.findPaginated(
-        options ?? {}
+        paginatedOptions
       );
 
       return ServiceResponse.success<PaginatedOptions<Encounter[]> | null>(

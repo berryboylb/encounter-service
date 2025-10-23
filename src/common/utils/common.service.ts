@@ -101,6 +101,7 @@ export abstract class BaseRepository<
     filterBy?: Partial<T>;
     orderBy?: string; // e.g., "-created_at" or "name"
     searchFields?: Array<keyof T>;
+    include?: Record<string, boolean | object>; // <-- add include for relations
   }): Promise<{
     data: DelegateReturnType<ModelDelegate, "findMany">;
     total: number;
@@ -116,14 +117,14 @@ export abstract class BaseRepository<
       filterBy = {},
       orderBy,
       searchFields = [],
+      include,
     } = options;
 
     page = Number(page) || 1;
     pageSize = Number(pageSize) || 10;
 
-    // 🔧 Fix: handle raw query strings like { 'filterBy[available]': 'true' }
+    // Handle raw query strings like { 'filterBy[available]': 'true' }
     if (typeof filterBy === "object" && Object.keys(filterBy).length === 0) {
-      // Check if the input actually looks like raw query object
       const maybeRaw = options as Record<string, any>;
       const flatKeys = Object.keys(maybeRaw).filter((k) =>
         k.startsWith("filterBy[")
@@ -134,16 +135,14 @@ export abstract class BaseRepository<
       }
     }
 
-    // ✅ Convert string values into proper types (boolean / number)
-    // ✅ Convert string values into proper types (boolean / number)
+    // Convert string values to proper types
     for (const key in filterBy) {
       const value = (filterBy as any)[key];
       if (value === "true") (filterBy as any)[key] = true;
       else if (value === "false") (filterBy as any)[key] = false;
-      else if (!Number.isNaN(Number(value))) (filterBy as any)[key] = Number(value);
+      else if (!Number.isNaN(Number(value)))
+        (filterBy as any)[key] = Number(value);
     }
-
-    console.log("filterBy", filterBy);
 
     const where: any = { ...filterBy };
 
@@ -164,12 +163,13 @@ export abstract class BaseRepository<
 
     console.log("where", where);
 
-    const total = await(this.model as any).count({ where });
+    const total = await (this.model as any).count({ where });
     const data = await this.model.findMany({
       where,
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: order,
+      include, // <-- include related models here
     });
 
     return {
