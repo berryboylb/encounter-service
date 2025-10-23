@@ -217,14 +217,14 @@ model Provider {
   id           String       @id @default(auto()) @map("_id") @db.ObjectId
   account_id   String       @db.ObjectId
   account      Account      @relation(fields: [account_id], references: [id])
-  name         String       @unique
+  name         String?       @unique
   image        String?
   type         String? // hospital, hmo, e.t.c
   phone_number String?
   address      String?
   whatsapp     String?
   hotline      String?
-  available    Boolean?
+  available    Boolean?     @default(true)
   encounters   Encounter[]
   branches     Branch[]
   created_at   DateTime     @default(now())
@@ -239,12 +239,16 @@ model Account {
   email             String     @unique
   password          String? // optional in case we want to extend to social signin
   role              Role // patient|admin|provider enum
+  otp               String?
+  otp_expires_at    DateTime?
   is_email_verified Boolean?
   last_login        DateTime?
   created_at        DateTime   @default(now())
   updated_at        DateTime   @updatedAt
   Patient           Patient[]
   Provider          Provider[]
+
+  @@index([otp])
 }
 
 model Branch {
@@ -256,6 +260,7 @@ model Branch {
   email        String?
   whatsapp     String?
   hotline      String?
+  available    Boolean?     @default(true)
   is_active    Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt

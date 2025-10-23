@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ZodSchema, ZodError } from "zod";
 
-type ValidationSource = "body" | "query" | "params";
+type ValidationSource = "body" | "params";
 
 export const validate =
   (schema: ZodSchema, source: ValidationSource = "body"): RequestHandler =>
@@ -20,6 +20,30 @@ export const validate =
       //strip unwanted fields
       const result = await schema.parse(target);
       req[source] = result;
+      next();
+    } catch (err) {
+      if (err instanceof ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: err.errors.map((e) => ({
+            path: e.path.join("."),
+            message: e.message,
+          })),
+        });
+      }
+      next(err);
+    }
+  };
+
+export const validateQuery =
+  (schema: ZodSchema): RequestHandler =>
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const target = req.query;
+
+      // Parse & strip unwanted fields
+      await schema.parseAsync(target);
+
       next();
     } catch (err) {
       if (err instanceof ZodError) {

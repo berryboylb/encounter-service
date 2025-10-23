@@ -2,9 +2,9 @@ import {
   OpenAPIRegistry,
   OpenApiGeneratorV3,
 } from "@asteasolutions/zod-to-openapi";
-
+import { accountRegistry } from "@/api/account/account.router";
 import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
-import { userRegistry } from "@/api/user/userRouter";
+import { authRegistry } from "@/api/auth/auth.routes";
 
 export type OpenAPIDocument = ReturnType<
   OpenApiGeneratorV3["generateDocument"]
@@ -13,11 +13,12 @@ export type OpenAPIDocument = ReturnType<
 export function generateOpenAPIDocument(): OpenAPIDocument {
   const registry = new OpenAPIRegistry([
     healthCheckRegistry,
-    userRegistry,
+    accountRegistry,
+    authRegistry,
   ]);
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
-  return generator.generateDocument({
+  const document = generator.generateDocument({
     openapi: "3.0.0",
     info: {
       version: "1.0.0",
@@ -27,5 +28,25 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
       description: "View the raw OpenAPI Specification in JSON format",
       url: "/swagger.json",
     },
-  });
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+  }) as any;
+
+  // Add security schemes
+  document.components = {
+    ...document.components,
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "JWT Bearer token for authorization",
+      },
+    },
+  };
+
+  return document;
 }
