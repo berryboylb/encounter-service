@@ -66,19 +66,19 @@ class ReferralController {
     res.status(result.statusCode).json(result);
   };
 
-  // ✅ Mark referral as ongoing
-  markOngoing: RequestHandler = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result = await referralService.markOngoing(id);
-    res.status(result.statusCode).json(result);
-  };
+  // // ✅ Mark referral as ongoing
+  // markOngoing: RequestHandler = async (req: Request, res: Response) => {
+  //   const { id } = req.params;
+  //   const result = await referralService.markOngoing(id);
+  //   res.status(result.statusCode).json(result);
+  // };
 
-  // ✅ Mark referral as completed
-  complete: RequestHandler = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result = await referralService.complete(id);
-    res.status(result.statusCode).json(result);
-  };
+  // // ✅ Mark referral as completed
+  // complete: RequestHandler = async (req: Request, res: Response) => {
+  //   const { id } = req.params;
+  //   const result = await referralService.complete(id);
+  //   res.status(result.statusCode).json(result);
+  // };
 
   // ✅ Delete referral
   delete: RequestHandler = async (req: Request, res: Response) => {

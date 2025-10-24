@@ -106,7 +106,7 @@ referralRegistry.registerPath({
 referralRouter.get(
   "/:id",
   authMiddleware,
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   referralController.getReferral
 );
 
@@ -125,7 +125,7 @@ referralRouter.patch(
   "/:id/approve",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   referralController.approve
 );
 
@@ -144,47 +144,47 @@ referralRouter.patch(
   "/:id/reject",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   referralController.reject
 );
 
 // Mark referral as ongoing
-referralRegistry.registerPath({
-  method: "patch",
-  path: "/referrals/{id}/ongoing",
-  tags: ["Referral"],
-  request: { params: z.object({ id: commonValidations.id }) },
-  responses: createApiResponse(
-    ReferralSchema,
-    "Referral marked as ongoing successfully"
-  ),
-});
-referralRouter.patch(
-  "/:id/ongoing",
-  authMiddleware,
-  roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
-  referralController.markOngoing
-);
+// referralRegistry.registerPath({
+//   method: "patch",
+//   path: "/referrals/{id}/ongoing",
+//   tags: ["Referral"],
+//   request: { params: z.object({ id: commonValidations.id }) },
+//   responses: createApiResponse(
+//     ReferralSchema,
+//     "Referral marked as ongoing successfully"
+//   ),
+// });
+// referralRouter.patch(
+//   "/:id/ongoing",
+//   authMiddleware,
+//   roleGuard(Role.Provider, Role.Admin),
+//   validate(commonValidations.params, "params"),
+//   referralController.markOngoing
+// );
 
 // Complete referral
-referralRegistry.registerPath({
-  method: "patch",
-  path: "/referrals/{id}/complete",
-  tags: ["Referral"],
-  request: { params: z.object({ id: commonValidations.id }) },
-  responses: createApiResponse(
-    ReferralSchema,
-    "Referral completed successfully"
-  ),
-});
-referralRouter.patch(
-  "/:id/complete",
-  authMiddleware,
-  roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
-  referralController.complete
-);
+// referralRegistry.registerPath({
+//   method: "patch",
+//   path: "/referrals/{id}/complete",
+//   tags: ["Referral"],
+//   request: { params: z.object({ id: commonValidations.id }) },
+//   responses: createApiResponse(
+//     ReferralSchema,
+//     "Referral completed successfully"
+//   ),
+// });
+// referralRouter.patch(
+//   "/:id/complete",
+//   authMiddleware,
+//   roleGuard(Role.Provider, Role.Admin),
+//   validate(commonValidations.params, "params"),
+//   referralController.complete
+// );
 
 // Delete referral
 referralRegistry.registerPath({
@@ -198,6 +198,6 @@ referralRouter.delete(
   "/:id",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   referralController.delete
 );

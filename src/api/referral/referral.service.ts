@@ -11,6 +11,9 @@ import {
 } from "./referral.dto";
 import { providerService } from "@/api/provider/provider.service";
 import { baseFilter, PaginatedOptions } from "@/types/express.types";
+import { patientService } from "@/api/patient/patient.service";
+import { encounterService } from "@/api/encounter/encounter.service";
+import { generateTrackingId } from "@/common/utils/tracking";
 
 export class ReferralService {
   constructor(public readonly referralRepository = new ReferralRepository()) {}
@@ -19,7 +22,51 @@ export class ReferralService {
     data: CreateReferral
   ): Promise<ServiceResponse<Referral | null>> {
     try {
-      const referral = await this.referralRepository.create({ data });
+      const [provider, patient, encounter] = await Promise.all([
+        providerService.providerRepository.findOne({
+          where: { id: data.provider_id },
+        }),
+        patientService.patientRepository.findOne({
+          where: {
+            id: data.patient_id,
+          },
+        }),
+        encounterService.encounterRepository.findOne({
+          where: {
+            id: data.encounter_id,
+          },
+        }),
+      ]);
+
+      if (!provider) {
+        return ServiceResponse.failure(
+          "Provider not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      if (!patient) {
+        return ServiceResponse.failure(
+          "Patient not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      if (!encounter) {
+        return ServiceResponse.failure(
+          "Encounter not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      const referral = await this.referralRepository.create({
+        data: {
+          ...data,
+          tracking_id: generateTrackingId(),
+        },
+      });
       return ServiceResponse.success("Referral created successfully", referral);
     } catch (error) {
       logger.error(`Error creating referral: ${(error as Error).message}`);
@@ -33,7 +80,9 @@ export class ReferralService {
 
   async findOne(id: string): Promise<ServiceResponse<Referral | null>> {
     try {
-      const referral = await this.referralRepository.findById(id);
+      const referral = await this.referralRepository.findById(id, {
+        include: { encounter: true, provider: true, patient: true },
+      });
 
       if (!referral) {
         return ServiceResponse.failure(
@@ -58,8 +107,27 @@ export class ReferralService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Referral[]> | null>> {
     try {
+      const paginatedOptions = {
+        ...options,
+        ...(options?.search
+          ? {
+              searchFields: options.searchFields ?? [
+                "reason",
+                "note",
+                "urgency",
+                "tracking_id",
+                "facility",
+              ],
+            }
+          : {}),
+        include: {
+          encounter: true,
+          provider: true,
+          patient: true,
+        },
+      };
       const referrals = await this.referralRepository.findPaginated(
-        options ?? {}
+        paginatedOptions
       );
       return ServiceResponse.success(
         "Referrals retrieved successfully",
@@ -128,11 +196,24 @@ export class ReferralService {
 
   async approve(id: string): Promise<ServiceResponse<Referral | null>> {
     try {
-      const referral = await this.referralRepository.update({
+      // 1️⃣ Fetch the referral first
+      const referral = await this.referralRepository.findById(id);
+
+      if (!referral) {
+        return ServiceResponse.failure(
+          "Referral not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      // 2️⃣ Update only if it exists
+      const updated = await this.referralRepository.update({
         where: { id },
         data: { status: "Approved" },
       });
-      return ServiceResponse.success("Referral approved", referral);
+
+      return ServiceResponse.success("Referral approved", updated);
     } catch (error) {
       logger.error(`Error approving referral: ${(error as Error).message}`);
       return ServiceResponse.failure(
@@ -145,11 +226,22 @@ export class ReferralService {
 
   async reject(id: string): Promise<ServiceResponse<Referral | null>> {
     try {
-      const referral = await this.referralRepository.update({
+      const referral = await this.referralRepository.findById(id);
+
+      if (!referral) {
+        return ServiceResponse.failure(
+          "Referral not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      const updated = await this.referralRepository.update({
         where: { id },
         data: { status: "Rejected" },
       });
-      return ServiceResponse.success("Referral rejected", referral);
+
+      return ServiceResponse.success("Referral rejected", updated);
     } catch (error) {
       logger.error(`Error rejecting referral: ${(error as Error).message}`);
       return ServiceResponse.failure(
@@ -160,41 +252,41 @@ export class ReferralService {
     }
   }
 
-  async markOngoing(id: string): Promise<ServiceResponse<Referral | null>> {
-    try {
-      const referral = await this.referralRepository.update({
-        where: { id },
-        data: { status: "Ongoing" },
-      });
-      return ServiceResponse.success("Referral marked as ongoing", referral);
-    } catch (error) {
-      logger.error(
-        `Error marking referral as ongoing: ${(error as Error).message}`
-      );
-      return ServiceResponse.failure(
-        "Failed to mark referral as ongoing",
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
+  // async markOngoing(id: string): Promise<ServiceResponse<Referral | null>> {
+  //   try {
+  //     const referral = await this.referralRepository.update({
+  //       where: { id },
+  //       data: { status: "Ongoing" },
+  //     });
+  //     return ServiceResponse.success("Referral marked as ongoing", referral);
+  //   } catch (error) {
+  //     logger.error(
+  //       `Error marking referral as ongoing: ${(error as Error).message}`
+  //     );
+  //     return ServiceResponse.failure(
+  //       "Failed to mark referral as ongoing",
+  //       null,
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
 
-  async complete(id: string): Promise<ServiceResponse<Referral | null>> {
-    try {
-      const referral = await this.referralRepository.update({
-        where: { id },
-        data: { status: "Completed" },
-      });
-      return ServiceResponse.success("Referral marked as completed", referral);
-    } catch (error) {
-      logger.error(`Error completing referral: ${(error as Error).message}`);
-      return ServiceResponse.failure(
-        "Failed to complete referral",
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
+  // async complete(id: string): Promise<ServiceResponse<Referral | null>> {
+  //   try {
+  //     const referral = await this.referralRepository.update({
+  //       where: { id },
+  //       data: { status: "Completed" },
+  //     });
+  //     return ServiceResponse.success("Referral marked as completed", referral);
+  //   } catch (error) {
+  //     logger.error(`Error completing referral: ${(error as Error).message}`);
+  //     return ServiceResponse.failure(
+  //       "Failed to complete referral",
+  //       null,
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
 
   async getMetrics(
     payload?: ReferralMetrics

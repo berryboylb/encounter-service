@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { EncounterRepository } from "@/api/encounter/encounter.repository";
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import {
+import  {
   Account,
   Branch,
   Encounter,
@@ -10,11 +10,12 @@ import {
   Role,
 } from "@/generated/prisma";
 import { logger } from "@/server";
-import {
+import type{
   CreateEncounter,
   EncounterMetrics,
   UpdateEncounter,
   Metrics,
+  RescheduleEncounterDto,
 } from "../encounter/encounter.dto";
 import { baseFilter, PaginatedOptions } from "@/types/express.types";
 import { providerService } from "@/api/provider/provider.service";
@@ -206,7 +207,13 @@ export class EncounterService {
 
   async findOne(id: string): Promise<ServiceResponse<Encounter | null>> {
     try {
-      const encounter = await this.encounterRepository.findById(id);
+      const encounter = await this.encounterRepository.findById(id, {
+        include: {
+          branch: true,
+          provider: true,
+          patient: true,
+        },
+      });
 
       if (!encounter) {
         return ServiceResponse.failure(
@@ -511,7 +518,8 @@ export class EncounterService {
   async cancelEncounter(
     id: string,
     role: Role,
-    account_id: string
+    account_id: string,
+    reason?: string // optional cancellation reason
   ): Promise<ServiceResponse<Encounter | null>> {
     try {
       let encounter = await this.encounterRepository.findOne({
@@ -563,7 +571,104 @@ export class EncounterService {
 
         if (!patient) {
           return ServiceResponse.failure(
+            "Patient not found",
+            null,
+            StatusCodes.NOT_FOUND
+          );
+        }
+
+        if (patient.id.toString() !== encounter.patient_id.toString()) {
+          return ServiceResponse.failure(
+            "You do not own this encounter",
+            null,
+            StatusCodes.FORBIDDEN
+          );
+        }
+      }
+
+      // Include the cancellation reason in the update
+      encounter = await this.encounterRepository.update({
+        where: { id },
+        data: {
+          status: EncounterStatus.CANCELLED,
+          cancellation_reason: reason ?? null, // optional
+        },
+      });
+
+      return ServiceResponse.success<Encounter>(
+        "Encounter cancelled",
+        encounter
+      );
+    } catch (error) {
+      logger.error(`Error cancelling encounter: ${(error as Error).message}`);
+
+      return ServiceResponse.failure(
+        "An error occurred while cancelling encounter",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async rescheduleEncounter(
+    id: string,
+    payload: RescheduleEncounterDto,
+    role: Role,
+    account_id: string
+  ): Promise<ServiceResponse<Encounter | null>> {
+    try {
+      let encounter = await this.encounterRepository.findOne({ where: { id } });
+
+      if (!encounter) {
+        return ServiceResponse.failure(
+          "Encounter not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      if (
+        encounter.status === EncounterStatus.COMPLETED ||
+        encounter.status === EncounterStatus.CANCELLED
+      ) {
+        return ServiceResponse.failure(
+          "Cannot reschedule a completed or cancelled encounter",
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      // Optional: check role ownership
+      if (role === Role.Provider) {
+        const provider = await providerService.providerRepository.findOne({
+          where: { account_id },
+        });
+
+        if (!provider) {
+          return ServiceResponse.failure(
             "Provider not found",
+            null,
+            StatusCodes.NOT_FOUND
+          );
+        }
+
+        if (provider.id.toString() !== encounter.provider_id.toString()) {
+          return ServiceResponse.failure(
+            "You do not own this encounter",
+            null,
+            StatusCodes.FORBIDDEN
+          );
+        }
+      }
+
+      if (role === Role.Patient) {
+        const patient = await patientService.patientRepository.findOne({
+          where: { account_id },
+        });
+
+        if (!patient) {
+          return ServiceResponse.failure(
+            "Patient not found",
             null,
             StatusCodes.NOT_FOUND
           );
@@ -581,19 +686,17 @@ export class EncounterService {
       encounter = await this.encounterRepository.update({
         where: { id },
         data: {
-          status: "CANCELLED" as EncounterStatus,
+          scheduled_date: payload.date,
+          rescheduled: true,
+          rescheduled_reason: payload.reason,
+          rescheduled_at: new Date(),
         },
       });
 
-      return ServiceResponse.success<Encounter>(
-        "Encounter cancelled",
-        encounter
-      );
+      return ServiceResponse.success("Encounter rescheduled", encounter);
     } catch (error) {
-      logger.error(`Error cancelling encounter: ${(error as Error).message}`);
-
       return ServiceResponse.failure(
-        "An error occurred while cancelling encounter",
+        "An error occurred while rescheduling the encounter",
         null,
         StatusCodes.INTERNAL_SERVER_ERROR
       );

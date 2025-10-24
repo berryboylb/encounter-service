@@ -3,16 +3,68 @@ import { TestRepository } from "@/api/test/test.repository";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { Test, Account, Role } from "@/generated/prisma";
 import { logger } from "@/server";
-import { CreateTest, UpdateTest, TestMetrics, TestMetricsResults } from "./test.dto";
+import {
+  CreateTest,
+  UpdateTest,
+  TestMetrics,
+  TestMetricsResults,
+} from "./test.dto";
 import { providerService } from "@/api/provider/provider.service";
 import { baseFilter, PaginatedOptions } from "@/types/express.types";
+import { patientService } from "@/api/patient/patient.service";
+import { encounterService } from "@/api/encounter/encounter.service";
+import { generateTrackingId } from "@/common/utils/tracking";
 
 export class TestService {
   constructor(public readonly testRepository = new TestRepository()) {}
 
   async create(data: CreateTest): Promise<ServiceResponse<Test | null>> {
     try {
-      const test = await this.testRepository.create({ data });
+      const [provider, patient, encounter] = await Promise.all([
+        providerService.providerRepository.findOne({
+          where: { id: data.provider_id },
+        }),
+        patientService.patientRepository.findOne({
+          where: {
+            id: data.patient_id,
+          },
+        }),
+        encounterService.encounterRepository.findOne({
+          where: {
+            id: data.encounter_id,
+          },
+        }),
+      ]);
+
+      if (!provider) {
+        return ServiceResponse.failure(
+          "Provider not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      if (!patient) {
+        return ServiceResponse.failure(
+          "Patient not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      if (!encounter) {
+        return ServiceResponse.failure(
+          "Encounter not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      const test = await this.testRepository.create({
+        data: {
+          ...data,
+          tracking_id: generateTrackingId(),
+        },
+      });
       return ServiceResponse.success("Test created successfully", test);
     } catch (error) {
       logger.error(`Error creating test: ${(error as Error).message}`);
@@ -26,7 +78,9 @@ export class TestService {
 
   async findOne(id: string): Promise<ServiceResponse<Test | null>> {
     try {
-      const test = await this.testRepository.findById(id);
+      const test = await this.testRepository.findById(id, {
+        include: { encounter: true, provider: true, patient: true },
+      });
 
       if (!test) {
         return ServiceResponse.failure(
@@ -51,7 +105,27 @@ export class TestService {
     options: baseFilter
   ): Promise<ServiceResponse<PaginatedOptions<Test[]> | null>> {
     try {
-      const tests = await this.testRepository.findPaginated(options ?? {});
+      const paginatedOptions = {
+        ...options,
+        ...(options?.search
+          ? {
+              searchFields: options.searchFields ?? [
+                "name",
+                "note",
+                "urgency",
+                "tat",
+                "tracking_id",
+                "facility",
+              ],
+            }
+          : {}),
+        include: {
+          encounter: true,
+          provider: true,
+          patient: true,
+        },
+      };
+      const tests = await this.testRepository.findPaginated(paginatedOptions);
       return ServiceResponse.success("Tests retrieved successfully", tests);
     } catch (error) {
       logger.error(`Error fetching tests: ${(error as Error).message}`);
@@ -116,11 +190,22 @@ export class TestService {
 
   async approve(id: string): Promise<ServiceResponse<Test | null>> {
     try {
-      const test = await this.testRepository.update({
+      const test = await this.testRepository.findById(id);
+
+      if (!test) {
+        return ServiceResponse.failure(
+          "Test not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      const updated = await this.testRepository.update({
         where: { id },
         data: { status: "Approved" },
       });
-      return ServiceResponse.success("Test approved", test);
+
+      return ServiceResponse.success("Test approved", updated);
     } catch (error) {
       logger.error(`Error approving test: ${(error as Error).message}`);
       return ServiceResponse.failure(
@@ -133,11 +218,22 @@ export class TestService {
 
   async reject(id: string): Promise<ServiceResponse<Test | null>> {
     try {
-      const test = await this.testRepository.update({
+      const test = await this.testRepository.findById(id);
+
+      if (!test) {
+        return ServiceResponse.failure(
+          "Test not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+
+      const updated = await this.testRepository.update({
         where: { id },
         data: { status: "Rejected" },
       });
-      return ServiceResponse.success("Test rejected", test);
+
+      return ServiceResponse.success("Test rejected", updated);
     } catch (error) {
       logger.error(`Error rejecting test: ${(error as Error).message}`);
       return ServiceResponse.failure(

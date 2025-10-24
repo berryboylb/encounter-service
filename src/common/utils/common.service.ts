@@ -38,12 +38,15 @@ export abstract class BaseRepository<
   }
 
   async findById(
-    id: string | number
+    id: string | number,
+    options?: {
+      include?: Record<string, boolean | object>;
+    }
   ): Promise<DelegateReturnType<ModelDelegate, "findUnique"> | null> {
-    return this.model.findUnique({ where: { id } } as DelegateMethodArgs<
-      ModelDelegate,
-      "findUnique"
-    >);
+    return this.model.findUnique({
+      where: { id },
+      include: options?.include,
+    } as DelegateMethodArgs<ModelDelegate, "findUnique">);
   }
 
   async findAll(

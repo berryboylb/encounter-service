@@ -127,3 +127,16 @@ export const EncounterMetricsSchema = z.object({
 });
 
 export type EncounterMetrics = z.infer<typeof EncounterMetricsSchema>;
+
+export const CancelEncounterSchema = z.object({
+  reason: z.string().optional(),
+});
+
+export type CancelEncounterDto = z.infer<typeof CancelEncounterSchema>;
+
+export const RescheduleEncounterSchema = z.object({
+  date: z.coerce.date(),
+  reason: z.string().optional(),
+});
+
+export type RescheduleEncounterDto = z.infer<typeof RescheduleEncounterSchema>;

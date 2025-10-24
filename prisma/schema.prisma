@@ -42,9 +42,7 @@ enum TestStatus {
 enum ReferralStatus {
   Pending
   Approved
-  Ongoing
   Rejected
-  Completed
 }
 
 model Medication {
@@ -64,7 +62,7 @@ model Medication {
   updated_at   DateTime   @updatedAt
   patient      Patient    @relation(fields: [patient_id], references: [id])
   provider     Provider   @relation(fields: [provider_id], references: [id])
-  Encounter    Encounter? @relation(fields: [encounter_id], references: [id])
+  encounter    Encounter? @relation(fields: [encounter_id], references: [id])
 
   @@index([patient_id])
   @@index([provider_id])
@@ -87,7 +85,7 @@ model Test {
   updated_at   DateTime    @updatedAt
   patient      Patient     @relation(fields: [patient_id], references: [id])
   provider     Provider    @relation(fields: [provider_id], references: [id])
-  Encounter    Encounter?  @relation(fields: [encounter_id], references: [id])
+  encounter    Encounter?  @relation(fields: [encounter_id], references: [id])
 
   @@index([patient_id])
   @@index([provider_id])
@@ -110,7 +108,7 @@ model Referral {
   updated_at   DateTime        @updatedAt
   patient      Patient         @relation(fields: [patient_id], references: [id])
   provider     Provider        @relation(fields: [provider_id], references: [id])
-  Encounter    Encounter?      @relation(fields: [encounter_id], references: [id])
+  encounter    Encounter?      @relation(fields: [encounter_id], references: [id])
 
   @@index([patient_id])
   @@index([provider_id])
@@ -163,6 +161,10 @@ model Encounter {
   actual_start_time      DateTime?
   actual_end_time        DateTime?
   symptoms               String[]        @default([])
+  cancellation_reason    String?
+  rescheduled            Boolean?
+  rescheduled_reason     String?
+  rescheduled_at         DateTime?
 
   subjective Subjective?
   objective  Objective?

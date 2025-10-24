@@ -16,9 +16,7 @@ export const CreateReferralSchema = z.object({
   reason: z.string(),
   note: z.string().optional(),
   urgency: z.string().optional(),
-  tracking_id: z.string().optional(),
   facility: z.string().optional(),
-  status: ReferralStatusEnum.optional().default("Pending"),
   patient_id: z.string(),
   provider_id: z.string(),
   encounter_id: z.string().optional(),
@@ -30,12 +28,7 @@ export const UpdateReferralSchema = z.object({
   reason: z.string().optional(),
   note: z.string().optional(),
   urgency: z.string().optional(),
-  tracking_id: z.string().optional(),
   facility: z.string().optional(),
-  status: ReferralStatusEnum.optional(),
-  patient_id: z.string().optional(),
-  provider_id: z.string().optional(),
-  encounter_id: z.string().optional(),
 });
 
 export type UpdateReferral = z.infer<typeof UpdateReferralSchema>;

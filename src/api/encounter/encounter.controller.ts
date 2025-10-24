@@ -3,6 +3,8 @@ import {
   CreateEncounter,
   UpdateEncounter,
   Metrics,
+  CancelEncounterDto,
+  RescheduleEncounterDto,
 } from "../encounter/encounter.dto";
 import { encounterService } from "@/api/encounter/encounter.service";
 import { baseFilter } from "@/types/express.types";
@@ -92,11 +94,27 @@ class EncounterController {
 
   // ✅ Cancel encounter
   public cancelEncounter: RequestHandler = async (
-    req: Request<{ id?: string }>,
+    req: Request<{ id?: string }, {}, CancelEncounterDto>,
     res: Response
   ) => {
+    const { reason } = req.body; // optional cancellation reason
     const serviceResponse = await encounterService.cancelEncounter(
       req.params.id!,
+      req.account?.role!,
+      req.account?.id!,
+      reason // pass the reason to the service
+    );
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
+
+  // ✅ reschedule encounter
+  public rescheduleEncounter: RequestHandler = async (
+    req: Request<{ id?: string }, {}, RescheduleEncounterDto>,
+    res: Response
+  ) => {
+    const serviceResponse = await encounterService.rescheduleEncounter(
+      req.params.id!,
+      req.body,
       req.account?.role!,
       req.account?.id!
     );

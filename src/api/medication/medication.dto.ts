@@ -12,7 +12,6 @@ export const CreateMedicationSchema = z.object({
   instructions: z.string().optional(),
   drug_form: z.string().optional(),
   quantity: z.number().optional(),
-  tracking_id: z.string().optional(),
   patient_id: z.string(),
   provider_id: z.string(),
   encounter_id: z.string().optional(),
@@ -28,10 +27,6 @@ export const UpdateMedicationSchema = z.object({
   instructions: z.string().optional(),
   drug_form: z.string().optional(),
   quantity: z.number().optional(),
-  tracking_id: z.string().optional(),
-  patient_id: z.string().optional(),
-  provider_id: z.string().optional(),
-  encounter_id: z.string().optional(),
 });
 
 export type UpdateMedication = z.infer<typeof UpdateMedicationSchema>;

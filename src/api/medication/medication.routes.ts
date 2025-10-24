@@ -116,6 +116,30 @@ medicationRegistry.registerPath({
 medicationRouter.get(
   "/:id",
   authMiddleware,
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   medicationController.getMedication
+);
+
+
+// ===============================
+// DELETE /encounter/:id
+// ===============================
+medicationRegistry.registerPath({
+  method: "delete",
+  path: "/api/v1/encounter/{id}",
+  tags: ["Encounter"],
+  request: { params: commonValidations.params },
+  security: [],
+  responses: createApiResponse(
+    MedicationSchema,
+    "Encounter deleted successfully"
+  ),
+});
+
+medicationRouter.delete(
+  "/:id",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Admin, Role.SuperAdmin),
+  validate(commonValidations.params, "params"),
+  medicationController.delete
 );

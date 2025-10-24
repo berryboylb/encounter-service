@@ -99,7 +99,7 @@ testRegistry.registerPath({
 testRouter.get(
   "/:id",
   authMiddleware,
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   testController.getTest
 );
 
@@ -115,7 +115,7 @@ testRouter.patch(
   "/:id/approve",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   testController.approve
 );
 
@@ -131,7 +131,7 @@ testRouter.patch(
   "/:id/reject",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   testController.reject
 );
 
@@ -147,6 +147,6 @@ testRouter.delete(
   "/:id",
   authMiddleware,
   roleGuard(Role.Provider, Role.Admin),
-  validate(commonValidations.id, "params"),
+  validate(commonValidations.params, "params"),
   testController.delete
 );

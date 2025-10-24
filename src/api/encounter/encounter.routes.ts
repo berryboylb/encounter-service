@@ -8,6 +8,8 @@ import {
   EncounterSchema,
   MetricsSchema,
   EncounterMetricsSchema,
+  CancelEncounterSchema,
+  RescheduleEncounterSchema,
 } from "@/api/encounter/encounter.dto";
 import { Role } from "@/generated/prisma";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -27,6 +29,7 @@ encounterRegistry.register("CreateEncounterSchema", CreateEncounterSchema);
 encounterRegistry.register("UpdateEncounterSchema", UpdateEncounterSchema);
 encounterRegistry.register("MetricsSchema", MetricsSchema);
 encounterRegistry.register("EncounterMetricsSchema", EncounterMetricsSchema);
+encounterRegistry.register("CancelEncounterSchema", CancelEncounterSchema);
 
 // ===============================
 // POST /encounter
@@ -178,6 +181,39 @@ encounterRouter.get(
 );
 
 // ===============================
+// PATCH /encounter/:id/reschedule
+// ===============================
+encounterRegistry.registerPath({
+  method: "patch",
+  path: "/api/v1/encounter/{id}/reschedule",
+  tags: ["Encounter"],
+  request: {
+    params: commonValidations.params,
+    body: {
+      content: {
+        "application/json": { schema: RescheduleEncounterSchema },
+      },
+      description: "Data to update an encounter",
+      required: true,
+    },
+  },
+  security: [],
+  responses: createApiResponse(
+    EncounterSchema,
+    "Encounter started successfully"
+  ),
+});
+
+encounterRouter.patch(
+  "/:id/reschedule",
+  authMiddleware,
+  roleGuard(Role.Provider, Role.Patient),
+  validate(commonValidations.params, "params"),
+  validate(RescheduleEncounterSchema, "body"),
+  encounterController.rescheduleEncounter
+);
+
+// ===============================
 // PATCH /encounter/:id/start
 // ===============================
 encounterRegistry.registerPath({
@@ -230,7 +266,16 @@ encounterRegistry.registerPath({
   method: "patch",
   path: "/api/v1/encounter/{id}/cancel",
   tags: ["Encounter"],
-  request: { params: commonValidations.params },
+  request: {
+    params: commonValidations.params,
+    body: {
+      content: {
+        "application/json": { schema: CancelEncounterSchema },
+      },
+      description: "Cancel Encounter",
+      required: true,
+    },
+  },
   security: [],
   responses: createApiResponse(
     EncounterSchema,
@@ -245,5 +290,3 @@ encounterRouter.patch(
   validate(commonValidations.params, "params"),
   encounterController.cancelEncounter
 );
-
-
