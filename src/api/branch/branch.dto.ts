@@ -13,7 +13,6 @@ export const CreateBranchSchema = z.object({
   email: z.string().email().optional(),
   whatsapp: z.string().optional(),
   hotline: z.string().optional(),
-  is_active: z.boolean().optional().default(true),
 });
 
 export type CreateBranch = z.infer<typeof CreateBranchSchema>;
@@ -25,7 +24,6 @@ export const UpdateBranchSchema = z.object({
   email: z.string().email().optional(),
   whatsapp: z.string().optional(),
   hotline: z.string().optional(),
-  is_active: z.boolean().optional(),
 });
 
 export type UpdateBranch = z.infer<typeof UpdateBranchSchema>;
@@ -37,5 +35,5 @@ export const BranchSchema = commonValidations.baseSchema.extend({
   email: z.string().email().optional(),
   whatsapp: z.string().optional(),
   hotline: z.string().optional(),
-  is_active: z.boolean().optional().default(true),
+  available: z.boolean().optional().default(true),
 });

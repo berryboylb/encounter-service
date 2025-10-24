@@ -264,7 +264,6 @@ model Branch {
   whatsapp     String?
   hotline      String?
   available    Boolean? @default(true)
-  is_active    Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
@@ -272,5 +271,5 @@ model Branch {
   encounters Encounter[]
 
   @@index([provider_id])
-  @@index([is_active])
+  @@index([available])
 }
